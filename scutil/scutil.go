@@ -1,6 +1,7 @@
 package scutil
 
 import (
+	"regexp"
 	"strings"
 	"sync"
 
@@ -55,6 +56,8 @@ func (runner *runner) GetDNSServers() {
 
 	outputLines := strings.Split(DNSString, "\n")
 
+	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
+
 	for _, outputLine := range outputLines {
 		parts := strings.SplitN(outputLine, ":", 2)
 		if len(parts) != 2 {
@@ -64,7 +67,8 @@ func (runner *runner) GetDNSServers() {
 		value := strings.TrimSpace(parts[1])
 
 		if strings.HasPrefix(key, "if_index") {
-			spew.Dump(value)
+			match := interfacePattern.FindStringSubmatch(value)
+			spew.Dump(match)
 		}
 	}
 	spew.Dump(err)
