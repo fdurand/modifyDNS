@@ -19,7 +19,7 @@ func Change(dns string) {
 		eth, _ := net.InterfaceByName(v.Name)
 		adresses, _ := eth.Addrs()
 		for _, adresse := range adresses {
-			IP, NetIP, _ := net.ParseCIDR(adresse.String())
+			_, NetIP, _ := net.ParseCIDR(adresse.String())
 			if NetIP.Contains(gatewayIP) {
 				spew.Dump(v)
 			}
