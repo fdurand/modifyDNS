@@ -14,7 +14,7 @@ func Change(dns string) {
 	gatewayIP, _ := gateway.DiscoverGateway()
 	spew.Dump(gatewayIP)
 	Interfaces, _ := net.Interfaces()
-	for _, v := range Interfaces() {
+	for _, v := range Interfaces {
 		spew.Dump(v)
 		eth, _ := net.InterfaceByName(v)
 		adresses, _ := eth.Addrs()
