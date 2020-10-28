@@ -15,13 +15,12 @@ func Change(dns string) {
 	spew.Dump(gatewayIP)
 	Interfaces, _ := net.Interfaces()
 	for _, v := range Interfaces {
-		spew.Dump(v)
 		eth, _ := net.InterfaceByName(v.Name)
 		adresses, _ := eth.Addrs()
 		for _, adresse := range adresses {
 			_, NetIP, _ := net.ParseCIDR(adresse.String())
 			if NetIP.Contains(gatewayIP) {
-				spew.Dump(v)
+				spew.Dump(v.Name)
 			}
 		}
 	}
