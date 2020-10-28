@@ -73,6 +73,7 @@ func (runner *runner) GetDNSServers(ifname string) {
 	found := false
 	for _, outputLine := range outputLines {
 		if !found {
+			spew.Dump(outputLine)
 			if strings.Contains(outputLine, "DNS configuration (for scoped queries)") {
 				found = true
 			} else {
