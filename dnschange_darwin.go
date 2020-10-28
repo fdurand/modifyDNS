@@ -1,6 +1,8 @@
 package dnschange
 
 import (
+	"net"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fdurand/modifyDNS/scutil"
 	"github.com/jackpal/gateway"
@@ -11,6 +13,17 @@ func Change(dns string) {
 	// var InterfaceName string
 	gatewayIP, _ := gateway.DiscoverGateway()
 	spew.Dump(gatewayIP)
+	for _, v := range net.Interfaces() {
+		spew.Dump(v)
+		eth, _ := net.InterfaceByName(v)
+		adresses, _ := eth.Addrs()
+		for _, adresse := range adresses {
+			IP, NetIP, _ = net.ParseCIDR(adresse.String())
+			if NetIP.Contains(gatewayIP) {
+				spew.Dump(v)
+			}
+		}
+	}
 	NetInterface := scutil.New(nil)
 	NetInterface.GetDNSServers()
 	// if err != nil {
