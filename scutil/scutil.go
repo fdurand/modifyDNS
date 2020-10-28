@@ -17,7 +17,7 @@ const (
 type Interface interface {
 	// GetDNSServers retreive the dns servers
 	// GetDNSServers(args []string) (bool, error)
-	GetDNSServers()
+	GetDNSServers(iface string)
 	// Set DNS server on this interface (name or index)
 	// SetDNSServer(iface string, dns string) error
 	// // Reset DNS server on this interface (name or index)
@@ -45,7 +45,7 @@ func New(exec utilexec.Interface) Interface {
 }
 
 // GetDNSServers uses the show addresses command and returns a formatted structure
-func (runner *runner) GetDNSServers() {
+func (runner *runner) GetDNSServers(ifname string) {
 	args := []string{
 		"--dns",
 	}
@@ -69,6 +69,8 @@ func (runner *runner) GetDNSServers() {
 		if strings.HasPrefix(key, "if_index") {
 			match := interfacePattern.FindStringSubmatch(value)
 			spew.Dump(match[1])
+		} else if strings.HasPrefix(key, "nameserver") {
+			spew.Dump(value)
 		}
 	}
 	spew.Dump(err)

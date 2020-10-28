@@ -13,6 +13,7 @@ func Change(dns string) {
 	// var InterfaceName string
 	gatewayIP, _ := gateway.DiscoverGateway()
 	spew.Dump(gatewayIP)
+	var gatewayInterface string
 	Interfaces, _ := net.Interfaces()
 	for _, v := range Interfaces {
 		eth, _ := net.InterfaceByName(v.Name)
@@ -20,12 +21,12 @@ func Change(dns string) {
 		for _, adresse := range adresses {
 			_, NetIP, _ := net.ParseCIDR(adresse.String())
 			if NetIP.Contains(gatewayIP) {
-				spew.Dump(v.Name)
+				gatewayInterface = v.Name
 			}
 		}
 	}
 	NetInterface := scutil.New(nil)
-	NetInterface.GetDNSServers()
+	NetInterface.GetDNSServers(gatewayInterface)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
