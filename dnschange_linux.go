@@ -20,7 +20,7 @@ func Change(dns string) {
 
 	f, err := os.Create("/etc/resolv.conf")
 
-	f.WriteString("nameserver " + dns)
+	f.WriteString("nameserver " + dns + "\n")
 	f.Sync()
 	time.Sleep(1 * time.Minute)
 	restoreDNS()
