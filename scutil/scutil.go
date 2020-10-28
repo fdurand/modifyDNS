@@ -56,9 +56,16 @@ func (runner *runner) GetDNSServers() {
 	outputLines := strings.Split(DNSString, "\n")
 
 	for _, outputLine := range outputLines {
+		parts := strings.SplitN(outputLine, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
 
-		spew.Dump(outputLine)
+		if strings.HasPrefix(key, "if_index") {
+			spew.Dump(value)
+		}
 	}
-
 	spew.Dump(err)
 }
