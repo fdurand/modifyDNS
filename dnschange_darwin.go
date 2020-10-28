@@ -16,7 +16,7 @@ func Change(dns string) {
 	Interfaces, _ := net.Interfaces()
 	for _, v := range Interfaces {
 		spew.Dump(v)
-		eth, _ := net.InterfaceByName(v)
+		eth, _ := net.InterfaceByName(v.Name)
 		adresses, _ := eth.Addrs()
 		for _, adresse := range adresses {
 			IP, NetIP, _ := net.ParseCIDR(adresse.String())
