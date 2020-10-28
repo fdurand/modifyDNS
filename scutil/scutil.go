@@ -45,7 +45,7 @@ func New(exec utilexec.Interface) Interface {
 // GetDNSServers uses the show addresses command and returns a formatted structure
 func (runner *runner) GetDNSServers() {
 	args := []string{
-		"-dns",
+		"--dns",
 	}
 
 	output, err := runner.exec.Command(cmdScutil, args...).CombinedOutput()
