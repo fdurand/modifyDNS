@@ -68,7 +68,7 @@ func (runner *runner) GetDNSServers(ifname string) {
 
 	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
-	var currentInterface DNSConfig
+	currentInterface := DNSConfig{}
 
 	found := false
 	for _, outputLine := range outputLines {
@@ -80,8 +80,6 @@ func (runner *runner) GetDNSServers(ifname string) {
 				continue
 			}
 		}
-
-		currentInterface = DNSConfig{}
 
 		parts := strings.SplitN(outputLine, ":", 2)
 		if len(parts) != 2 {
