@@ -30,6 +30,16 @@ type runner struct {
 	exec utilexec.Interface
 }
 
+type DNSConfig struct {
+	Domain       string
+	SearchDomain []string
+	NameServers  []string
+	IfIndex      string
+	Flags        string
+	Reach        string
+	Options      string
+}
+
 // New returns a new Interface which will exec scutil.
 func New(exec utilexec.Interface) Interface {
 
@@ -50,7 +60,7 @@ func (runner *runner) GetDNSServers(ifname string) {
 		"--dns",
 	}
 
-	output, err := runner.exec.Command(cmdScutil, args...).CombinedOutput()
+	output, _ := runner.exec.Command(cmdScutil, args...).CombinedOutput()
 
 	DNSString := string(output[:])
 
@@ -58,7 +68,20 @@ func (runner *runner) GetDNSServers(ifname string) {
 
 	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
+	var currentInterface DNSConfig
+
+	found := false
 	for _, outputLine := range outputLines {
+		if !found {
+			if strings.Contains(outputLine, "DNS configuration (for scoped queries)") {
+				found = true
+			} else {
+				continue
+			}
+		}
+
+		currentInterface = DNSConfig{}
+
 		parts := strings.SplitN(outputLine, ":", 2)
 		if len(parts) != 2 {
 			continue
@@ -68,10 +91,25 @@ func (runner *runner) GetDNSServers(ifname string) {
 
 		if strings.HasPrefix(key, "if_index") {
 			match := interfacePattern.FindStringSubmatch(value)
-			spew.Dump(match[1])
+			if match[1] == ifname {
+				found = true
+				currentInterface.IfIndex = ifname
+			}
 		} else if strings.HasPrefix(key, "nameserver") {
-			spew.Dump(value)
+			currentInterface.NameServers = append(currentInterface.NameServers, value)
+		} else if strings.HasPrefix(key, "search domain") {
+			currentInterface.SearchDomain = append(currentInterface.SearchDomain, value)
+		} else if strings.HasPrefix(key, "flags") {
+			currentInterface.Flags = value
+		} else if strings.HasPrefix(key, "reach") {
+			currentInterface.Reach = value
+		} else if strings.HasPrefix(key, "domain") {
+			currentInterface.Domain = value
+		} else if strings.HasPrefix(key, "reach") {
+			currentInterface.Reach = value
+		} else if strings.HasPrefix(key, "options") {
+			currentInterface.Options = value
 		}
 	}
-	spew.Dump(err)
+	spew.Dump(currentInterface)
 }
