@@ -1,6 +1,7 @@
 package scutil
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/davecgh/go-spew/spew"
@@ -49,6 +50,15 @@ func (runner *runner) GetDNSServers() {
 	}
 
 	output, err := runner.exec.Command(cmdScutil, args...).CombinedOutput()
-	spew.Dump(output)
+
+	DNSString := string(output[:])
+
+	outputLines := strings.Split(DNSString, "\n")
+
+	for _, outputLine := range outputLines {
+
+		spew.Dump(outputLine)
+	}
+
 	spew.Dump(err)
 }
