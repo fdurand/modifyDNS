@@ -68,7 +68,7 @@ func (runner *runner) GetDNSServers() {
 
 		if strings.HasPrefix(key, "if_index") {
 			match := interfacePattern.FindStringSubmatch(value)
-			spew.Dump(match)
+			spew.Dump(match[1])
 		}
 	}
 	spew.Dump(err)
