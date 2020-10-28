@@ -13,13 +13,13 @@ func Change(dns string) {
 	// var InterfaceName string
 	gatewayIP, _ := gateway.DiscoverGateway()
 	spew.Dump(gatewayIP)
-	Interfaces := net.Interfaces()
+	Interfaces, _ := net.Interfaces()
 	for _, v := range Interfaces() {
 		spew.Dump(v)
 		eth, _ := net.InterfaceByName(v)
 		adresses, _ := eth.Addrs()
 		for _, adresse := range adresses {
-			IP, NetIP, _ = net.ParseCIDR(adresse.String())
+			IP, NetIP, _ := net.ParseCIDR(adresse.String())
 			if NetIP.Contains(gatewayIP) {
 				spew.Dump(v)
 			}
