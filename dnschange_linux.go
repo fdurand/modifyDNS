@@ -3,7 +3,6 @@ package dnschange
 import (
 	"fmt"
 	"os"
-	"time"
 )
 
 const (
@@ -22,8 +21,6 @@ func (d *DNSStruct) Change(dns string) {
 
 	f.WriteString("nameserver " + dns + "\n")
 	f.Sync()
-	time.Sleep(1 * time.Minute)
-	d.RestoreDNS(dns)
 }
 
 func (d *DNSStruct) RestoreDNS(dns string) {
