@@ -13,26 +13,29 @@ import (
 const (
 	cmdScutil       string = "scutil"
 	cmdNetworksetup string = "networksetup"
+	cmdIfconfig     string = "ifconfig"
 )
 
-// Interface is an injectable interface for running netsh commands.  Implementations must be goroutine-safe.
+// Interface is an injectable interface for running scutil/networkconfig/ifconfig commands.
 type Interface interface {
 	// GetDNSServers retreive the dns servers
-	// GetDNSServers(args []string) (bool, error)
 	GetDNSServers(iface string) error
 	// Set DNS server
 	SetDNSServer(dns string) error
-	// // Reset DNS server
+	// Reset DNS server
 	ResetDNSServer() error
+	AddInterfaceAlias() error
+	RemoveInterfaceAlias() error
 }
 
-// runner implements Interface in terms of exec("netsh").
+// runner implements Interface
 type runner struct {
 	mu                 sync.Mutex
 	exec               utilexec.Interface
 	InterFaceDNSConfig DNSConfig
 }
 
+// DNSConfig structure
 type DNSConfig struct {
 	Domain       string
 	SearchDomain []string
@@ -73,8 +76,6 @@ func (runner *runner) GetDNSServers(ifname string) error {
 	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
 	runner.InterFaceDNSConfig = DNSConfig{}
-
-	// currentInterface := DNSConfig{}
 
 	found := false
 
@@ -152,7 +153,7 @@ func (runner *runner) InterfaceAliasName() error {
 	return err
 }
 
-// Set DNS server on the interface (name or index)
+// Set DNS server
 func (runner *runner) SetDNSServer(dns string) error {
 	args := []string{
 		"-setdnsservers", runner.InterFaceDNSConfig.IfName, dns,
@@ -164,7 +165,7 @@ func (runner *runner) SetDNSServer(dns string) error {
 	return nil
 }
 
-// Reset DNS on the interface (name or index)
+// Reset DNS
 func (runner *runner) ResetDNSServer() error {
 	args := []string{
 		"-setdnsservers", runner.InterFaceDNSConfig.IfName, strings.Join(runner.InterFaceDNSConfig.NameServers[:], " "),
@@ -173,6 +174,32 @@ func (runner *runner) ResetDNSServer() error {
 
 	if stdout, err := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
+	}
+
+	return nil
+}
+
+// Add interface alias
+func (runner *runner) AddInterfaceAlias() error {
+	args := []string{
+		"lo0", "alias", "127.0.0.69",
+	}
+
+	if _, err := runner.exec.Command(cmdIfconfig, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to add alias on interface lo0")
+	}
+
+	return nil
+}
+
+// Remove interface alias
+func (runner *runner) RemoveInterfaceAlias() error {
+	args := []string{
+		"lo0", "-alias", "127.0.0.69",
+	}
+
+	if _, err := runner.exec.Command(cmdIfconfig, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to remove alias on interface lo0")
 	}
 
 	return nil

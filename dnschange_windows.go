@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fdurand/gonetsh/netsh"
 	"github.com/jackpal/gateway"
 )
 
-func Change(dns string) {
+func (d DNSStruct) Change(dns string) {
 	var OriginalDNSServer string
 	var InterfaceName string
 	gatewayIP, _ := gateway.DiscoverGateway()
@@ -27,13 +26,16 @@ func Change(dns string) {
 	}
 
 	time.Sleep(1 * time.Minute)
-	restoreDNS(NetInterface, OriginalDNSServer, InterfaceName)
+
+	d.NetInterface = *NetInterface
+
+	d.RestoreDNS(NetInterface, OriginalDNSServer, InterfaceName)
 }
 
-func restoreDNS(NetInterface netsh.Interface, dns string, iface string) {
+func (d DNSStruct) RestoreDNS(NetInterface netsh.Interface, dns string, iface string) {
 	if dns == "" {
-		NetInterface.ResetDNSServer(iface)
+		d.NetInterface.ResetDNSServer(iface)
 	} else {
-		NetInterface.SetDNSServer(iface, dns)
+		d.NetInterface.SetDNSServer(iface, dns)
 	}
 }
