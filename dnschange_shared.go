@@ -1,7 +1,7 @@
 package dnschange
 
 type DNSStruct struct {
-	NetInterface *interface{}
+	NetInterface interface{}
 }
 
 func NewDNSChange() *DNSStruct {

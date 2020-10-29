@@ -32,7 +32,7 @@ func (d DNSStruct) Change(dns string) {
 
 	NetInterface.SetDNSServer(dns)
 
-	d.NetInterface = NetInterface
+	*d.NetInterface = NetInterface
 
 	time.Sleep(1 * time.Minute)
 	NetInterface.ResetDNSServer()
