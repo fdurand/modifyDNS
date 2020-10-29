@@ -3,9 +3,7 @@ package dnschange
 import (
 	"fmt"
 	"net"
-	"time"
 
-	"github.com/fdurand/gonetsh/netsh"
 	"github.com/fdurand/modifyDNS/scutil"
 	"github.com/jackpal/gateway"
 )
@@ -33,11 +31,8 @@ func (d DNSStruct) Change(dns string) {
 	NetInterface.SetDNSServer(dns)
 
 	d.NetInterface = NetInterface
-
-	time.Sleep(1 * time.Minute)
-	NetInterface.ResetDNSServer()
 }
 
-func (d DNSStruct) RestoreDNS(NetInterface netsh.Interface, dns string, iface string) {
+func (d DNSStruct) RestoreDNS() {
 	d.NetInterface.(scutil.Interface).ResetDNSServer()
 }
