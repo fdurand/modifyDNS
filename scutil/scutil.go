@@ -130,8 +130,6 @@ func (runner *runner) InterfaceAliasName(iface string) (string, error) {
 
 	outputLines := strings.Split(DNSString, "\n")
 
-	spew.Dump(outputLines)
-
 	interfacePattern := regexp.MustCompile("\\(Hardware Port:\\s+(.*),\\s+Device:\\s+(.*)\\)")
 
 	for _, outputLine := range outputLines {
