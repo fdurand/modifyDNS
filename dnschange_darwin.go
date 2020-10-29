@@ -1,7 +1,9 @@
 package dnschange
 
 import (
+	"fmt"
 	"net"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fdurand/modifyDNS/scutil"
@@ -26,10 +28,15 @@ func Change(dns string) {
 		}
 	}
 	NetInterface := scutil.New(nil)
-	NetInterface.GetDNSServers(gatewayInterface)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	DNSConfig := NetInterface.GetDNSServers(gatewayInterface)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	NetInterface.SetDNSServer("127.0.0.69")
+	time.Sleep(1 * time.Minute)
+	NetInterface.ResetDNSServer()
+
 	// for _, v := range NetInterfaces {
 	// 	if gatewayIP.String() == v.DefaultGatewayAddress {
 	// 		OriginalDNSServer = v.StaticDNSServers

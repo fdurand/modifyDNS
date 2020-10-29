@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/davecgh/go-spew/spew"
 	utilexec "k8s.io/utils/exec"
 )
 
@@ -21,17 +19,18 @@ const (
 type Interface interface {
 	// GetDNSServers retreive the dns servers
 	// GetDNSServers(args []string) (bool, error)
-	GetDNSServers(iface string) DNSConfig
-	// Set DNS server on this interface (name or index)
-	// SetDNSServer(iface string, dns string) error
-	// // Reset DNS server on this interface (name or index)
-	// ResetDNSServer(iface string) error
+	GetDNSServers(iface string) error
+	// Set DNS server
+	SetDNSServer(dns string) error
+	// // Reset DNS server
+	ResetDNSServer() error
 }
 
 // runner implements Interface in terms of exec("netsh").
 type runner struct {
-	mu   sync.Mutex
-	exec utilexec.Interface
+	mu                 sync.Mutex
+	exec               utilexec.Interface
+	InterFaceDNSConfig DNSConfig
 }
 
 type DNSConfig struct {
@@ -39,6 +38,7 @@ type DNSConfig struct {
 	SearchDomain []string
 	NameServers  []string
 	IfIndex      string
+	IfName       string
 	Flags        string
 	Reach        string
 	Options      string
@@ -59,7 +59,7 @@ func New(exec utilexec.Interface) Interface {
 }
 
 // GetDNSServers uses the show addresses command and returns a formatted structure
-func (runner *runner) GetDNSServers(ifname string) DNSConfig {
+func (runner *runner) GetDNSServers(ifname string) error {
 	args := []string{
 		"--dns",
 	}
@@ -72,7 +72,9 @@ func (runner *runner) GetDNSServers(ifname string) DNSConfig {
 
 	interfacePattern := regexp.MustCompile("^\\d+\\s+\\((.*)\\)")
 
-	currentInterface := DNSConfig{}
+	runner.InterFaceDNSConfig = DNSConfig{}
+
+	// currentInterface := DNSConfig{}
 
 	found := false
 
@@ -96,30 +98,31 @@ func (runner *runner) GetDNSServers(ifname string) DNSConfig {
 			match := interfacePattern.FindStringSubmatch(value)
 			if match[1] == ifname {
 				found = true
-				currentInterface.IfIndex = ifname
+				runner.InterFaceDNSConfig.IfIndex = ifname
 			}
 		} else if strings.HasPrefix(key, "nameserver") {
-			currentInterface.NameServers = append(currentInterface.NameServers, value)
+			runner.InterFaceDNSConfig.NameServers = append(runner.InterFaceDNSConfig.NameServers, value)
 		} else if strings.HasPrefix(key, "search domain") {
-			currentInterface.SearchDomain = append(currentInterface.SearchDomain, value)
+			runner.InterFaceDNSConfig.SearchDomain = append(runner.InterFaceDNSConfig.SearchDomain, value)
 		} else if strings.HasPrefix(key, "flags") {
-			currentInterface.Flags = value
+			runner.InterFaceDNSConfig.Flags = value
 		} else if strings.HasPrefix(key, "reach") {
-			currentInterface.Reach = value
+			runner.InterFaceDNSConfig.Reach = value
 		} else if strings.HasPrefix(key, "domain") {
-			currentInterface.Domain = value
+			runner.InterFaceDNSConfig.Domain = value
 		} else if strings.HasPrefix(key, "reach") {
-			currentInterface.Reach = value
+			runner.InterFaceDNSConfig.Reach = value
 		} else if strings.HasPrefix(key, "options") {
-			currentInterface.Options = value
+			runner.InterFaceDNSConfig.Options = value
 		}
 	}
-	runner.InterfaceAliasName(currentInterface.IfIndex)
 
-	return currentInterface
+	err := runner.InterfaceAliasName()
+
+	return err
 }
 
-func (runner *runner) InterfaceAliasName(iface string) (string, error) {
+func (runner *runner) InterfaceAliasName() error {
 
 	args := []string{
 		"-listnetworkserviceorder",
@@ -133,45 +136,42 @@ func (runner *runner) InterfaceAliasName(iface string) (string, error) {
 
 	interfacePattern := regexp.MustCompile("\\(Hardware Port:\\s+(.*),\\s+Device:\\s+(.*)\\)")
 
-	var alias string
 	err := errors.New("Unable to find the interface alias")
 
 	for _, outputLine := range outputLines {
 		if strings.Contains(outputLine, "Hardware Port") {
 			match := interfacePattern.FindStringSubmatch(outputLine)
-			if match[2] == iface {
-				alias = match[1]
-				spew.Dump(match[1])
+			if match[2] == runner.InterFaceDNSConfig.IfIndex {
+				runner.InterFaceDNSConfig.IfName = match[1]
 				err = nil
 			}
 		} else {
 			continue
 		}
 	}
-	return alias, err
+	return err
 }
 
 // Set DNS server on the interface (name or index)
-func (runner *runner) SetDNSServer(iface string, dns string) error {
+func (runner *runner) SetDNSServer(dns string) error {
 	args := []string{
-		"interface", "ipv4", "set", "dnsservers", "name=" + strconv.Quote(iface), "source=static", strconv.Quote(dns), "primary",
+		"-setdnsservers", runner.InterFaceDNSConfig.IfName, dns,
 	}
 	cmd := strings.Join(args, " ")
-	if stdout, err := runner.exec.Command(cmdScutil, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to set dns servers on [%v], error: %v. cmd: %v. stdout: %v", iface, err.Error(), cmd, string(stdout))
+	if stdout, err := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to set dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
 	}
-
 	return nil
 }
 
 // Reset DNS on the interface (name or index)
-func (runner *runner) ResetDNSServer(iface string) error {
+func (runner *runner) ResetDNSServer() error {
 	args := []string{
-		"interface", "ipv4", "set", "dnsservers", "name=" + strconv.Quote(iface), "source=dhcp",
+		"-setdnsservers", runner.InterFaceDNSConfig.IfName, strings.Join(runner.InterFaceDNSConfig.NameServers[:], " "),
 	}
 	cmd := strings.Join(args, " ")
 	if stdout, err := runner.exec.Command(cmdScutil, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", iface, err.Error(), cmd, string(stdout))
+		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
 	}
 
 	return nil
