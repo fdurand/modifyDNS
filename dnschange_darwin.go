@@ -32,14 +32,12 @@ func (d DNSStruct) Change(dns string) {
 
 	NetInterface.SetDNSServer(dns)
 
-	*d.NetInterface = NetInterface
+	d.NetInterface = NetInterface
 
 	time.Sleep(1 * time.Minute)
 	NetInterface.ResetDNSServer()
 }
 
 func (d DNSStruct) RestoreDNS(NetInterface netsh.Interface, dns string, iface string) {
-	if dns == "" {
-		d.NetInterface.ResetDNSServer()
-	}
+	d.NetInterface.(scutil.Interface).ResetDNSServer()
 }

@@ -27,7 +27,7 @@ func (d DNSStruct) Change(dns string) {
 
 	time.Sleep(1 * time.Minute)
 
-	d.NetInterface = *NetInterface
+	d.NetInterface = NetInterface
 
 	d.RestoreDNS(NetInterface, OriginalDNSServer, InterfaceName)
 }
