@@ -23,10 +23,10 @@ func (d *DNSStruct) Change(dns string) {
 	f.WriteString("nameserver " + dns + "\n")
 	f.Sync()
 	time.Sleep(1 * time.Minute)
-	d.RestoreDNS()
+	d.RestoreDNS(dns)
 }
 
-func (d *DNSStruct) RestoreDNS() {
+func (d *DNSStruct) RestoreDNS(dns string) {
 	err := os.Remove(resolvConf)
 	if err != nil {
 		fmt.Println(err)

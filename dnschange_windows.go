@@ -24,6 +24,6 @@ func (d *DNSStruct) Change(dns string) {
 	}
 }
 
-func (d *DNSStruct) RestoreDNS() {
+func (d *DNSStruct) RestoreDNS(dns string) {
 	d.NetInterface.(netsh.Interface).ResetDNSServer()
 }

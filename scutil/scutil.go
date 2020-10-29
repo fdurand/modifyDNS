@@ -24,8 +24,8 @@ type Interface interface {
 	SetDNSServer(dns string) error
 	// Reset DNS server
 	ResetDNSServer() error
-	AddInterfaceAlias() error
-	RemoveInterfaceAlias() error
+	AddInterfaceAlias(string) error
+	RemoveInterfaceAlias(string) error
 }
 
 // runner implements Interface
@@ -180,27 +180,23 @@ func (runner *runner) ResetDNSServer() error {
 }
 
 // Add interface alias
-func (runner *runner) AddInterfaceAlias() error {
+func (runner *runner) AddInterfaceAlias(ip string) error {
 	args := []string{
-		"lo0", "alias", "127.0.0.69",
+		"lo0", "alias", ip,
 	}
-
 	if _, err := runner.exec.Command(cmdIfconfig, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to add alias on interface lo0")
 	}
-
 	return nil
 }
 
 // Remove interface alias
-func (runner *runner) RemoveInterfaceAlias() error {
+func (runner *runner) RemoveInterfaceAlias(ip string) error {
 	args := []string{
-		"lo0", "-alias", "127.0.0.69",
+		"lo0", "-alias", ip,
 	}
-
 	if _, err := runner.exec.Command(cmdIfconfig, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to remove alias on interface lo0")
 	}
-
 	return nil
 }

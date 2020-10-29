@@ -27,12 +27,13 @@ func (d *DNSStruct) Change(dns string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	NetInterface.AddInterfaceAlias(dns)
 	NetInterface.SetDNSServer(dns)
 
 	d.NetInterface = NetInterface
 }
 
-func (d *DNSStruct) RestoreDNS() {
+func (d *DNSStruct) RestoreDNS(dns string) {
 	d.NetInterface.(scutil.Interface).ResetDNSServer()
+	d.NetInterface.(scutil.Interface).RemoveInterfaceAlias(dns)
 }
