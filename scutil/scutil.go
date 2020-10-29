@@ -137,7 +137,9 @@ func (runner *runner) InterfaceAliasName(iface string) (string, error) {
 	for _, outputLine := range outputLines {
 		if strings.Contains(outputLine, "Hardware Port") {
 			match := interfacePattern.FindStringSubmatch(outputLine)
-			spew.Dump(match)
+			if match[1] == iface {
+				spew.Dump(match[2])
+			}
 		} else {
 			continue
 		}
