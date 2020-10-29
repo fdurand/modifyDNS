@@ -132,6 +132,16 @@ func (runner *runner) InterfaceAliasName(iface string) (string, error) {
 
 	spew.Dump(outputLines)
 
+	interfacePattern := regexp.MustCompile("\\(Hardware Port:\\s+(.*),\\s+Device:\\s+(.*)\\)")
+
+	for _, outputLine := range outputLines {
+		if strings.Contains(outputLine, "Hardware Port") {
+			match := interfacePattern.FindStringSubmatch(outputLine)
+			spew.Dump(match)
+		} else {
+			continue
+		}
+	}
 	return iface, nil
 }
 
