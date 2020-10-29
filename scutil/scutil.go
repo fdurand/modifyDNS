@@ -1,7 +1,9 @@
 package scutil
 
 import (
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -10,14 +12,15 @@ import (
 )
 
 const (
-	cmdScutil string = "scutil"
+	cmdScutil       string = "scutil"
+	cmdNetworksetup string = "networksetup"
 )
 
 // Interface is an injectable interface for running netsh commands.  Implementations must be goroutine-safe.
 type Interface interface {
 	// GetDNSServers retreive the dns servers
 	// GetDNSServers(args []string) (bool, error)
-	GetDNSServers(iface string)
+	GetDNSServers(iface string) DNSConfig
 	// Set DNS server on this interface (name or index)
 	// SetDNSServer(iface string, dns string) error
 	// // Reset DNS server on this interface (name or index)
@@ -55,7 +58,7 @@ func New(exec utilexec.Interface) Interface {
 }
 
 // GetDNSServers uses the show addresses command and returns a formatted structure
-func (runner *runner) GetDNSServers(ifname string) {
+func (runner *runner) GetDNSServers(ifname string) DNSConfig {
 	args := []string{
 		"--dns",
 	}
@@ -71,9 +74,9 @@ func (runner *runner) GetDNSServers(ifname string) {
 	currentInterface := DNSConfig{}
 
 	found := false
+
 	for _, outputLine := range outputLines {
 		if !found {
-			spew.Dump(outputLine)
 			if strings.Contains(outputLine, "DNS configuration (for scoped queries)") {
 				found = true
 			} else {
@@ -110,5 +113,50 @@ func (runner *runner) GetDNSServers(ifname string) {
 			currentInterface.Options = value
 		}
 	}
-	spew.Dump(currentInterface)
+	runner.InterfaceAliasName(currentInterface.IfIndex)
+
+	return currentInterface
+}
+
+func (runner *runner) InterfaceAliasName(iface string) (string, error) {
+
+	args := []string{
+		"-listnetworkserviceorder",
+	}
+
+	output, _ := runner.exec.Command(cmdNetworksetup, args...).CombinedOutput()
+
+	DNSString := string(output[:])
+
+	outputLines := strings.Split(DNSString, "\n")
+
+	spew.Dump(outputLines)
+
+	return iface, nil
+}
+
+// Set DNS server on the interface (name or index)
+func (runner *runner) SetDNSServer(iface string, dns string) error {
+	args := []string{
+		"interface", "ipv4", "set", "dnsservers", "name=" + strconv.Quote(iface), "source=static", strconv.Quote(dns), "primary",
+	}
+	cmd := strings.Join(args, " ")
+	if stdout, err := runner.exec.Command(cmdScutil, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to set dns servers on [%v], error: %v. cmd: %v. stdout: %v", iface, err.Error(), cmd, string(stdout))
+	}
+
+	return nil
+}
+
+// Reset DNS on the interface (name or index)
+func (runner *runner) ResetDNSServer(iface string) error {
+	args := []string{
+		"interface", "ipv4", "set", "dnsservers", "name=" + strconv.Quote(iface), "source=dhcp",
+	}
+	cmd := strings.Join(args, " ")
+	if stdout, err := runner.exec.Command(cmdScutil, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", iface, err.Error(), cmd, string(stdout))
+	}
+
+	return nil
 }
