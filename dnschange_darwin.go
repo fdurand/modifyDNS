@@ -28,7 +28,7 @@ func Change(dns string) {
 		}
 	}
 	NetInterface := scutil.New(nil)
-	DNSConfig := NetInterface.GetDNSServers(gatewayInterface)
+	err := NetInterface.GetDNSServers(gatewayInterface)
 	if err != nil {
 		fmt.Println(err)
 	}
