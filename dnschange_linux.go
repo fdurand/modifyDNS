@@ -11,7 +11,7 @@ const (
 	resolvConfSave = "/etc/resolv.conf.save"
 )
 
-func (d DNSStruct) Change(dns string) {
+func (d *DNSStruct) Change(dns string) {
 
 	err := os.Rename(resolvConf, resolvConfSave)
 	if err != nil {
@@ -26,7 +26,7 @@ func (d DNSStruct) Change(dns string) {
 	d.RestoreDNS()
 }
 
-func (d DNSStruct) RestoreDNS() {
+func (d *DNSStruct) RestoreDNS() {
 	err := os.Remove(resolvConf)
 	if err != nil {
 		fmt.Println(err)

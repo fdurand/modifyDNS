@@ -8,7 +8,7 @@ import (
 	"github.com/jackpal/gateway"
 )
 
-func (d DNSStruct) Change(dns string) {
+func (d *DNSStruct) Change(dns string) {
 	gatewayIP, _ := gateway.DiscoverGateway()
 	var gatewayInterface string
 	Interfaces, _ := net.Interfaces()
@@ -33,6 +33,6 @@ func (d DNSStruct) Change(dns string) {
 	d.NetInterface = NetInterface
 }
 
-func (d DNSStruct) RestoreDNS() {
+func (d *DNSStruct) RestoreDNS() {
 	d.NetInterface.(scutil.Interface).ResetDNSServer()
 }
