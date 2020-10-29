@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/davecgh/go-spew/spew"
 	utilexec "k8s.io/utils/exec"
 )
 
@@ -170,6 +171,7 @@ func (runner *runner) ResetDNSServer() error {
 		"-setdnsservers", runner.InterFaceDNSConfig.IfName, strings.Join(runner.InterFaceDNSConfig.NameServers[:], " "),
 	}
 	cmd := strings.Join(args, " ")
+	spew.Dump(cmd)
 	if stdout, err := runner.exec.Command(cmdScutil, args...).CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to reset dns servers on [%v], error: %v. cmd: %v. stdout: %v", runner.InterFaceDNSConfig.IfName, err.Error(), cmd, string(stdout))
 	}
