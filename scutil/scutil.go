@@ -1,6 +1,7 @@
 package scutil
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -132,18 +133,22 @@ func (runner *runner) InterfaceAliasName(iface string) (string, error) {
 
 	interfacePattern := regexp.MustCompile("\\(Hardware Port:\\s+(.*),\\s+Device:\\s+(.*)\\)")
 
+	var alias string
+	err := errors.New("Unable to find the interface alias")
+
 	for _, outputLine := range outputLines {
 		if strings.Contains(outputLine, "Hardware Port") {
 			match := interfacePattern.FindStringSubmatch(outputLine)
-			spew.Dump(match[1])
-			if match[1] == iface {
-				spew.Dump(match[2])
+			if match[2] == iface {
+				alias = match[1]
+				spew.Dump(match[1])
+				err = nil
 			}
 		} else {
 			continue
 		}
 	}
-	return iface, nil
+	return alias, err
 }
 
 // Set DNS server on the interface (name or index)
